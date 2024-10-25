@@ -1,45 +1,50 @@
 package com.devsuperior.dsmeta.controllers;
 
+import com.devsuperior.dsmeta.dto.SaleMinDTO;
+import com.devsuperior.dsmeta.services.SaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.devsuperior.dsmeta.dto.SaleMinDTO;
-import com.devsuperior.dsmeta.services.SaleService;
-
-import java.time.LocalDate;
-
 @RestController
-@RequestMapping(value = "/sales")
+@RequestMapping("/sales")
 public class SaleController {
 
 	@Autowired
 	private SaleService service;
 
-	@GetMapping(value = "/{id}")
+	@GetMapping("/{id}")
 	public ResponseEntity<SaleMinDTO> findById(@PathVariable Long id) {
 		SaleMinDTO dto = service.findById(id);
 		return ResponseEntity.ok(dto);
 	}
 
-	@GetMapping(value = "/report")
-	public ResponseEntity<?> getReport() {
-		// TODO
-		return null;
-	}
-
-	@GetMapping(value = "/summary")
-	public ResponseEntity<Page<SaleMinDTO>> getSummary(
-			@RequestParam(name = "minDate") String minDate,
-			@RequestParam(name = "maxDate") String maxDate,
-			@RequestParam(name = "name") String name,
+	@GetMapping("/report")
+	public ResponseEntity<Page<?>> getSalesDateSeller(
+			@RequestParam(name = "minDate", defaultValue = "") String minDate,
+			@RequestParam(name = "maxDate", defaultValue = "") String maxDate,
+			@RequestParam(name = "name", defaultValue = "") String name,
 			Pageable pageable) {
 
-		Page<SaleMinDTO> dto = service.searchPagedSalesWithInitialDateFinalDateAnSellerPartialName(
-				minDate, maxDate, name, pageable);
+		if (minDate.equals("") && maxDate.equals("") && name.equals("")) {
+			return ResponseEntity.ok(service.getReportSalesForSeller(pageable));
+		} else {
+			return ResponseEntity.ok(service.getReportSaleByNameAndDate(minDate, maxDate, name, pageable));
+		}
+	}
 
-		return ResponseEntity.ok(dto);
+	@GetMapping("/summary")
+	public ResponseEntity<Page<?>> getSummaryForDate(
+		 @RequestParam(name = "minDate" ,defaultValue = "") String minDate,
+		 @RequestParam(name = "maxDate" ,defaultValue = "") String maxDate,
+		 Pageable pageable) {
+
+		if (minDate.equals("") && maxDate.equals("") ) {
+			return ResponseEntity.ok(service.getSummarySellerNameAmount(pageable));
+		} else {
+			return ResponseEntity.ok(service.getSummarySellerNameAmountForDate(minDate, maxDate, pageable));
+		}
 	}
 }
